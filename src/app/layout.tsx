@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Script from 'next/script';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
@@ -16,8 +17,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
-        <script src="/theme-init.js" />
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
         <div className="fixed right-3 top-2 z-50">
