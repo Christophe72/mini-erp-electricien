@@ -118,7 +118,7 @@ export default async function EditInterventionPage({
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Modifier l'intervention</h2>
+          <h2 className="text-2xl font-bold">Modifier intervention</h2>
           <Link href="/interventions" className="text-sm font-medium text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
             ← Retour liste
           </Link>
