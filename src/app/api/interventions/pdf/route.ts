@@ -78,12 +78,12 @@ export async function GET(request: NextRequest) {
       activityName: settings.activityName,
       filterLabel,
       generatedAt,
-    })
+    }) as Parameters<typeof renderToBuffer>[0]
   );
 
   const filename = mois ? `interventions-${mois}.pdf` : 'interventions.pdf';
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

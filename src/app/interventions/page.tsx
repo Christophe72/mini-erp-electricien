@@ -7,9 +7,6 @@ import { STATUS_LABELS, STATUS_BADGE, STATUS_BADGE_DEFAULT, getReste, isNonSolde
 import ExportCsvButton from '@/components/ExportCsvButton';
 import ExportPdfButton from '@/components/ExportPdfButton';
 
-// Ré-export pour les fichiers qui l'importaient depuis ici
-export { STATUS_LABELS };
-
 
 function buildMonthOptions() {
   const options: { value: string; label: string }[] = [];
