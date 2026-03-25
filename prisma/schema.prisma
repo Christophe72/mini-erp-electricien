@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum InterventionStatus {
+  A_FAIRE
+  EN_COURS
+  TERMINEE
+  ANNULEE
+}
+
+enum PaymentMethod {
+  ESPECES
+  VIREMENT
+  CARTE
+  AUTRE
+}
+
+model UserSetting {
+  id           Int      @id @default(1)
+  activityName String   @default("Activité électricité")
+  monthlyLimit Decimal  @default(0.00)
+  currency     String   @default("EUR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Client {
+  id         Int            @id @default(autoincrement())
+  firstName  String
+  lastName   String
+  phone      String?
+  email      String?
+  address    String?
+  postalCode String?
+  city       String?
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  interventions Intervention[]
+}
+
+model Intervention {
+  id                     Int                @id @default(autoincrement())
+  clientId               Int
+  date                   DateTime
+  workType               String
+  description            String?
+  estimatedDurationHours Float?
+  actualDurationHours    Float?
+  status                 InterventionStatus @default(A_FAIRE)
+  plannedAmount          Decimal            @default(0.00)
+  receivedAmount         Decimal            @default(0.00)
+  paymentMethod          PaymentMethod      @default(VIREMENT)
+  notes                  String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
