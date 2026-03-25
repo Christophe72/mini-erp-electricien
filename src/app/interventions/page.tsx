@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { InterventionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { toEuro } from '@/lib/money';
+import ExportCsvButton from '@/components/ExportCsvButton';
 import ExportPdfButton from '@/components/ExportPdfButton';
 
 export const STATUS_LABELS: Record<InterventionStatus, string> = {
@@ -131,6 +132,9 @@ export default async function InterventionsPage({
           </Link>
         )}
 
+        <Suspense>
+          <ExportCsvButton />
+        </Suspense>
         <Suspense>
           <ExportPdfButton />
         </Suspense>

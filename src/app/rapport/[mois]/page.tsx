@@ -9,6 +9,8 @@ const STATUS_LABELS: Record<InterventionStatus, string> = {
   A_FAIRE: 'À faire',
   EN_COURS: 'En cours',
   TERMINEE: 'Terminée',
+  FACTUREE: 'Facturée',
+  PAYEE: 'Payée',
   ANNULEE: 'Annulée',
 };
 
@@ -68,6 +70,12 @@ export default async function RapportPage({
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             ↓ Export CSV
+          </a>
+          <a
+            href={`/api/interventions/pdf?mois=${mois}`}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            ↓ Export PDF
           </a>
           <PrintButton />
         </div>
