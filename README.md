@@ -28,7 +28,7 @@ Simple, lisible, rapide. Ce n'est pas un ERP lourd — c'est un outil pour ne pa
 **Transversal**
 - Mode jour / nuit avec bouton dans la nav, persisté dans `localStorage`
 - Respect automatique de la préférence système au premier chargement
-- Zéro flash de thème au chargement (script inline avant hydration React)
+- Zéro flash de thème au chargement (`<Script strategy="beforeInteractive">` inline dans `layout.tsx`)
 
 ## Règles métier
 
@@ -127,6 +127,7 @@ src/
 └── lib/
     ├── db.ts                        # Instance Prisma singleton (compatible hot-reload)
     ├── dashboard.ts                 # Requêtes agrégées du dashboard
+    ├── interventions.ts             # Labels, styles, calculs métier (reste, non soldée, date paiement)
     ├── money.ts                     # Formatage Intl.NumberFormat fr-BE
     └── pdf/
         └── interventions-document.tsx  # Composant @react-pdf/renderer (A4 paysage)
