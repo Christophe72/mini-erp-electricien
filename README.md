@@ -20,6 +20,9 @@ Simple, lisible, rapide. Ce n'est pas un ERP lourd — c'est un outil pour ne pa
 | `/interventions/nouveau` | Formulaire de création lié à un client (statut, durée, montants, mode de paiement) |
 | `/interventions/[id]/edit` | Modification + suppression intervention (avec confirmation) |
 | `/parametres` | Nom de l'activité, seuil mensuel, devise |
+| `/tresorerie` | Résumé des 12 derniers mois : encaissé, % du seuil, liens vers rapports |
+| `/rapport/[mois]` | Rapport mensuel imprimable (table + barre de seuil + total) |
+| `GET /api/interventions/csv` | Export CSV filtré par mois et/ou statut |
 
 **Transversal**
 - Mode jour / nuit avec bouton dans la nav, persisté dans `localStorage`
@@ -121,6 +124,6 @@ prisma/
 - [x] Suppression avec confirmation (`window.confirm`)
 - [x] Filtres par mois / statut sur la liste des interventions
 - [x] Recherche clients (nom, ville, téléphone)
-- [ ] Page trésorerie (`/tresorerie`) — résumé mensuel
-- [ ] Export CSV des interventions
-- [ ] Rapport mensuel imprimable
+- [x] Page trésorerie (`/tresorerie`) — résumé mensuel 12 mois
+- [x] Export CSV des interventions (filtre mois/statut transmis, BOM UTF-8 pour Excel)
+- [x] Rapport mensuel imprimable (`/rapport/[mois]`) avec styles `print:`

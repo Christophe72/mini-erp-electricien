@@ -21,10 +21,11 @@ async function createIntervention(formData: FormData) {
       description: String(formData.get('description') ?? '').trim() || null,
       estimatedDurationHours: Number(formData.get('estimatedDurationHours') || 0) || null,
       actualDurationHours: Number(formData.get('actualDurationHours') || 0) || null,
-      status: (String(formData.get('status') ?? 'A_FAIRE') as 'A_FAIRE' | 'EN_COURS' | 'TERMINEE' | 'ANNULEE'),
+      status: (String(formData.get('status') ?? 'A_FAIRE') as 'A_FAIRE' | 'EN_COURS' | 'TERMINEE' | 'FACTUREE' | 'PAYEE' | 'ANNULEE'),
       plannedAmount: Number(formData.get('plannedAmount') || 0),
       receivedAmount: Number(formData.get('receivedAmount') || 0),
       paymentMethod: (String(formData.get('paymentMethod') ?? 'VIREMENT') as 'ESPECES' | 'VIREMENT' | 'CARTE' | 'AUTRE'),
+      paymentDate: String(formData.get('paymentDate') ?? '').trim() ? new Date(String(formData.get('paymentDate'))) : null,
       notes: String(formData.get('notes') ?? '').trim() || null,
     },
   });
@@ -72,6 +73,8 @@ export default async function NewInterventionPage() {
             <option value="A_FAIRE">À faire</option>
             <option value="EN_COURS">En cours</option>
             <option value="TERMINEE">Terminée</option>
+            <option value="FACTUREE">Facturée</option>
+            <option value="PAYEE">Payée</option>
             <option value="ANNULEE">Annulée</option>
           </select>
 
@@ -83,9 +86,10 @@ export default async function NewInterventionPage() {
           </select>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <input type="number" step="0.01" name="plannedAmount" placeholder="Montant prévu" className={inputCls} />
-          <input type="number" step="0.01" name="receivedAmount" placeholder="Montant encaissé" className={inputCls} />
+        <div className="grid gap-4 md:grid-cols-3">
+          <input type="number" step="0.01" name="plannedAmount" placeholder="Montant prévu (€)" className={inputCls} />
+          <input type="number" step="0.01" name="receivedAmount" placeholder="Montant encaissé (€)" className={inputCls} />
+          <input type="date" name="paymentDate" placeholder="Date de paiement" className={inputCls} />
         </div>
 
         <textarea name="notes" placeholder="Notes" className={`min-h-24 ${inputCls}`} />

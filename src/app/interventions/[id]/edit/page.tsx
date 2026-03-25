@@ -15,6 +15,17 @@ async function updateIntervention(formData: FormData) {
 
   if (!id || !clientId || !date || !workType) throw new Error('Intervention invalide');
 
+  const status = String(formData.get('status') ?? 'A_FAIRE') as InterventionStatus;
+  const paymentDateRaw = String(formData.get('paymentDate') ?? '').trim();
+
+  // Auto-date de paiement si statut PAYEE et aucune date fournie
+  let paymentDate: Date | null = null;
+  if (paymentDateRaw) {
+    paymentDate = new Date(paymentDateRaw);
+  } else if (status === 'PAYEE') {
+    paymentDate = new Date();
+  }
+
   await prisma.intervention.update({
     where: { id },
     data: {
@@ -24,10 +35,11 @@ async function updateIntervention(formData: FormData) {
       description: String(formData.get('description') ?? '').trim() || null,
       estimatedDurationHours: Number(formData.get('estimatedDurationHours') || 0) || null,
       actualDurationHours: Number(formData.get('actualDurationHours') || 0) || null,
-      status: String(formData.get('status') ?? 'A_FAIRE') as InterventionStatus,
+      status,
       plannedAmount: Number(formData.get('plannedAmount') || 0),
       receivedAmount: Number(formData.get('receivedAmount') || 0),
       paymentMethod: String(formData.get('paymentMethod') ?? 'VIREMENT') as PaymentMethod,
+      paymentDate,
       notes: String(formData.get('notes') ?? '').trim() || null,
     },
   });
@@ -51,6 +63,7 @@ async function deleteIntervention(formData: FormData) {
 }
 
 const inputCls = 'rounded-lg border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:border-slate-400';
+const labelCls = 'mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400';
 
 export default async function EditInterventionPage({
   params,
@@ -67,6 +80,9 @@ export default async function EditInterventionPage({
   if (!intervention) notFound();
 
   const dateValue = new Date(intervention.date).toISOString().slice(0, 10);
+  const paymentDateValue = intervention.paymentDate
+    ? new Date(intervention.paymentDate).toISOString().slice(0, 10)
+    : '';
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -78,47 +94,87 @@ export default async function EditInterventionPage({
           </Link>
         </div>
 
-        <form action={updateIntervention} className="grid gap-4">
+        <form action={updateIntervention} className="grid gap-5">
           <input type="hidden" name="id" value={intervention.id} />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <select name="clientId" defaultValue={intervention.clientId} className={inputCls} required>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
-              ))}
-            </select>
-            <input type="date" name="date" defaultValue={dateValue} className={inputCls} required />
+            <div>
+              <label className={labelCls}>Client</label>
+              <select name="clientId" defaultValue={intervention.clientId} className={inputCls} required>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.lastName} {c.firstName}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Date</label>
+              <input type="date" name="date" defaultValue={dateValue} className={inputCls} required />
+            </div>
           </div>
 
-          <input name="workType" defaultValue={intervention.workType} placeholder="Type de travail" className={inputCls} required />
-          <textarea name="description" defaultValue={intervention.description ?? ''} placeholder="Description" className={`min-h-24 ${inputCls}`} />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <input type="number" step="0.5" name="estimatedDurationHours" defaultValue={intervention.estimatedDurationHours ?? ''} placeholder="Durée estimée (h)" className={inputCls} />
-            <input type="number" step="0.5" name="actualDurationHours" defaultValue={intervention.actualDurationHours ?? ''} placeholder="Durée réelle (h)" className={inputCls} />
+          <div>
+            <label className={labelCls}>Type de travail</label>
+            <input name="workType" defaultValue={intervention.workType} placeholder="Type de travail" className={inputCls} required />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <select name="status" defaultValue={intervention.status} className={inputCls}>
-              <option value="A_FAIRE">À faire</option>
-              <option value="EN_COURS">En cours</option>
-              <option value="TERMINEE">Terminée</option>
-              <option value="ANNULEE">Annulée</option>
-            </select>
-            <select name="paymentMethod" defaultValue={intervention.paymentMethod} className={inputCls}>
-              <option value="VIREMENT">Virement</option>
-              <option value="ESPECES">Espèces</option>
-              <option value="CARTE">Carte</option>
-              <option value="AUTRE">Autre</option>
-            </select>
+          <div>
+            <label className={labelCls}>Description</label>
+            <textarea name="description" defaultValue={intervention.description ?? ''} placeholder="Description" className={`min-h-24 ${inputCls}`} />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <input type="number" step="0.01" name="plannedAmount" defaultValue={Number(intervention.plannedAmount)} placeholder="Montant prévu" className={inputCls} />
-            <input type="number" step="0.01" name="receivedAmount" defaultValue={Number(intervention.receivedAmount)} placeholder="Montant encaissé" className={inputCls} />
+            <div>
+              <label className={labelCls}>Durée estimée (h)</label>
+              <input type="number" step="0.5" name="estimatedDurationHours" defaultValue={intervention.estimatedDurationHours ?? ''} placeholder="0" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Durée réelle (h)</label>
+              <input type="number" step="0.5" name="actualDurationHours" defaultValue={intervention.actualDurationHours ?? ''} placeholder="0" className={inputCls} />
+            </div>
           </div>
 
-          <textarea name="notes" defaultValue={intervention.notes ?? ''} placeholder="Notes" className={`min-h-24 ${inputCls}`} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className={labelCls}>Statut</label>
+              <select name="status" defaultValue={intervention.status} className={inputCls}>
+                <option value="A_FAIRE">À faire</option>
+                <option value="EN_COURS">En cours</option>
+                <option value="TERMINEE">Terminée</option>
+                <option value="FACTUREE">Facturée</option>
+                <option value="PAYEE">Payée</option>
+                <option value="ANNULEE">Annulée</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Mode de paiement</label>
+              <select name="paymentMethod" defaultValue={intervention.paymentMethod} className={inputCls}>
+                <option value="VIREMENT">Virement</option>
+                <option value="ESPECES">Espèces</option>
+                <option value="CARTE">Carte</option>
+                <option value="AUTRE">Autre</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label className={labelCls}>Montant prévu (€)</label>
+              <input type="number" step="0.01" name="plannedAmount" defaultValue={Number(intervention.plannedAmount)} placeholder="0.00" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Montant encaissé (€)</label>
+              <input type="number" step="0.01" name="receivedAmount" defaultValue={Number(intervention.receivedAmount)} placeholder="0.00" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Date de paiement</label>
+              <input type="date" name="paymentDate" defaultValue={paymentDateValue} className={inputCls} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Notes</label>
+            <textarea name="notes" defaultValue={intervention.notes ?? ''} placeholder="Notes libres" className={`min-h-24 ${inputCls}`} />
+          </div>
 
           <button className="rounded-lg bg-slate-900 px-4 py-3 font-medium text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600">
             Enregistrer les modifications
@@ -135,7 +191,7 @@ export default async function EditInterventionPage({
           <input type="hidden" name="id" value={intervention.id} />
           <DeleteButton
             label="Supprimer l'intervention"
-            confirmMessage={`Supprimer l'intervention « ${intervention.workType} » du ${new Date(intervention.date).toLocaleDateString('fr-BE')} ?`}
+            confirmMessage={`Supprimer « ${intervention.workType} » du ${new Date(intervention.date).toLocaleDateString('fr-BE')} ?`}
             className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
           />
         </form>

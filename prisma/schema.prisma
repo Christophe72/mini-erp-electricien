@@ -10,6 +10,8 @@ enum InterventionStatus {
   A_FAIRE
   EN_COURS
   TERMINEE
+  FACTUREE
+  PAYEE
   ANNULEE
 }
 
@@ -57,6 +59,7 @@ model Intervention {
   plannedAmount          Decimal            @default(0.00)
   receivedAmount         Decimal            @default(0.00)
   paymentMethod          PaymentMethod      @default(VIREMENT)
+  paymentDate            DateTime?
   notes                  String?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
