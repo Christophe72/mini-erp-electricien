@@ -9,8 +9,12 @@ export default function ExportCsvButton() {
     const params = new URLSearchParams();
     const mois = searchParams.get('mois');
     const statut = searchParams.get('statut');
+    const clientId = searchParams.get('clientId');
+    const nonSoldees = searchParams.get('nonSoldees');
     if (mois) params.set('mois', mois);
     if (statut) params.set('statut', statut);
+    if (clientId) params.set('clientId', clientId);
+    if (nonSoldees) params.set('nonSoldees', nonSoldees);
     const qs = params.toString();
     window.location.href = `/api/interventions/csv${qs ? `?${qs}` : ''}`;
   }

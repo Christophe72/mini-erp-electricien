@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { resolvePaymentDate, canMarkAsPayee } from '@/lib/interventions';
 
 async function createIntervention(formData: FormData) {
   'use server';
@@ -13,6 +14,16 @@ async function createIntervention(formData: FormData) {
     throw new Error('Client, date et type de travail obligatoires');
   }
 
+  const status = String(formData.get('status') ?? 'A_FAIRE') as 'A_FAIRE' | 'EN_COURS' | 'TERMINEE' | 'FACTUREE' | 'PAYEE' | 'ANNULEE';
+  const plannedAmount = Number(formData.get('plannedAmount') || 0);
+  const receivedAmount = Number(formData.get('receivedAmount') || 0);
+
+  if (status === 'PAYEE' && !canMarkAsPayee(plannedAmount, receivedAmount)) {
+    redirect('/interventions/nouveau?error=payee_not_covered');
+  }
+
+  const paymentDate = resolvePaymentDate(status, String(formData.get('paymentDate') ?? '').trim(), receivedAmount);
+
   await prisma.intervention.create({
     data: {
       clientId,
@@ -21,11 +32,11 @@ async function createIntervention(formData: FormData) {
       description: String(formData.get('description') ?? '').trim() || null,
       estimatedDurationHours: Number(formData.get('estimatedDurationHours') || 0) || null,
       actualDurationHours: Number(formData.get('actualDurationHours') || 0) || null,
-      status: (String(formData.get('status') ?? 'A_FAIRE') as 'A_FAIRE' | 'EN_COURS' | 'TERMINEE' | 'FACTUREE' | 'PAYEE' | 'ANNULEE'),
-      plannedAmount: Number(formData.get('plannedAmount') || 0),
-      receivedAmount: Number(formData.get('receivedAmount') || 0),
+      status,
+      plannedAmount,
+      receivedAmount,
       paymentMethod: (String(formData.get('paymentMethod') ?? 'VIREMENT') as 'ESPECES' | 'VIREMENT' | 'CARTE' | 'AUTRE'),
-      paymentDate: String(formData.get('paymentDate') ?? '').trim() ? new Date(String(formData.get('paymentDate'))) : null,
+      paymentDate,
       notes: String(formData.get('notes') ?? '').trim() || null,
     },
   });
@@ -37,7 +48,17 @@ async function createIntervention(formData: FormData) {
 
 const inputCls = 'rounded-lg border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:border-slate-400';
 
-export default async function NewInterventionPage() {
+const ERRORS: Record<string, string> = {
+  payee_not_covered: 'Statut "Payée" impossible : le montant encaissé doit être supérieur ou égal au montant prévu.',
+};
+
+export default async function NewInterventionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   const clients = await prisma.client.findMany({
     orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
   });
@@ -45,6 +66,12 @@ export default async function NewInterventionPage() {
   return (
     <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900">
       <h2 className="text-2xl font-bold">Nouvelle intervention</h2>
+
+      {error && ERRORS[error] && (
+        <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+          {ERRORS[error]}
+        </div>
+      )}
 
       <form action={createIntervention} className="mt-6 grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">

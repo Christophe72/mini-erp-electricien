@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
+import { STATUS_LABELS, getReste } from '@/lib/interventions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,15 +26,6 @@ export interface InterventionsPdfProps {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const STATUS_LABELS: Record<string, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
-
 function eur(n: number): string {
   return n.toFixed(2).replace('.', ',') + ' €';
 }
@@ -138,10 +130,7 @@ export function InterventionsPdfDocument({
 }: InterventionsPdfProps) {
   const totalPlanned  = interventions.reduce((s, i) => s + i.plannedAmount, 0);
   const totalReceived = interventions.reduce((s, i) => s + i.receivedAmount, 0);
-  const totalRemain   = interventions.reduce((s, i) => {
-    const r = i.plannedAmount - i.receivedAmount;
-    return s + (r > 0 ? r : 0);
-  }, 0);
+  const totalRemain   = interventions.reduce((s, i) => s + getReste(i.plannedAmount, i.receivedAmount), 0);
 
   return (
     <Document title="Interventions" author={activityName}>
@@ -176,7 +165,7 @@ export function InterventionsPdfDocument({
 
         {/* Lignes */}
         {interventions.map((item, idx) => {
-          const reste = item.plannedAmount - item.receivedAmount;
+          const reste = getReste(item.plannedAmount, item.receivedAmount);
           return (
             <View key={idx} style={[s.trow, idx % 2 === 1 ? s.trowAlt : {}]}>
               <Text style={[s.td, s.cDate]}>{fmtDate(item.date)}</Text>

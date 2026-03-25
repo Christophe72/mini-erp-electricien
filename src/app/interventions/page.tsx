@@ -3,26 +3,13 @@ import { Suspense } from 'react';
 import { InterventionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { toEuro } from '@/lib/money';
+import { STATUS_LABELS, STATUS_BADGE, STATUS_BADGE_DEFAULT, getReste, isNonSoldee, NON_SOLDEE_DB_WHERE } from '@/lib/interventions';
 import ExportCsvButton from '@/components/ExportCsvButton';
 import ExportPdfButton from '@/components/ExportPdfButton';
 
-export const STATUS_LABELS: Record<InterventionStatus, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
+// Ré-export pour les fichiers qui l'importaient depuis ici
+export { STATUS_LABELS };
 
-const STATUS_BADGE: Record<InterventionStatus, string> = {
-  A_FAIRE: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
-  EN_COURS: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-  TERMINEE: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  FACTUREE: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  PAYEE: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  ANNULEE: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
-};
 
 function buildMonthOptions() {
   const options: { value: string; label: string }[] = [];
@@ -45,6 +32,9 @@ export default async function InterventionsPage({
 }) {
   const { mois, statut, clientId, nonSoldees } = await searchParams;
 
+  const knownStatuses = new Set<string>(Object.values(InterventionStatus));
+  const safeStatut = statut && knownStatuses.has(statut) ? statut as InterventionStatus : undefined;
+
   const [clients, interventions] = await Promise.all([
     prisma.client.findMany({ orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }] }),
     prisma.intervention.findMany({
@@ -53,29 +43,23 @@ export default async function InterventionsPage({
           const [y, m] = mois.split('-').map(Number);
           return { date: { gte: new Date(y, m - 1, 1), lt: new Date(y, m, 1) } };
         })() : {}),
-        ...(statut ? { status: statut as InterventionStatus } : {}),
+        ...(nonSoldees === '1'
+          ? NON_SOLDEE_DB_WHERE
+          : safeStatut ? { status: safeStatut } : {}),
         ...(clientId ? { clientId: Number(clientId) } : {}),
-        ...(nonSoldees === '1' ? {
-          status: { not: 'ANNULEE' as InterventionStatus },
-          plannedAmount: { gt: 0 },
-        } : {}),
       },
       include: { client: true },
       orderBy: { date: 'desc' },
     }),
   ]);
 
-  // Exclude PAYEE from "non soldées" (PAYEE may not exist in the DB enum yet, filtered here)
   const displayedInterventions = nonSoldees === '1'
-    ? interventions.filter((i) => (i.status as string) !== 'PAYEE')
+    ? interventions.filter((i) => isNonSoldee(i.status, Number(i.plannedAmount), Number(i.receivedAmount)))
     : interventions;
 
   const hasFilter = !!(mois || statut || clientId || nonSoldees);
   const totalEncaisse = displayedInterventions.reduce((s, i) => s + Number(i.receivedAmount), 0);
-  const totalReste = displayedInterventions.reduce((s, i) => {
-    const r = Number(i.plannedAmount) - Number(i.receivedAmount);
-    return s + (r > 0 ? r : 0);
-  }, 0);
+  const totalReste = displayedInterventions.reduce((s, i) => s + getReste(Number(i.plannedAmount), Number(i.receivedAmount)), 0);
 
   const monthOptions = buildMonthOptions();
 
@@ -168,7 +152,7 @@ export default async function InterventionsPage({
             </thead>
             <tbody>
               {displayedInterventions.map((item) => {
-                const reste = Number(item.plannedAmount) - Number(item.receivedAmount);
+                const reste = getReste(Number(item.plannedAmount), Number(item.receivedAmount));
                 return (
                   <tr key={item.id} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
                     <td className="px-3 py-2">{new Date(item.date).toLocaleDateString('fr-BE')}</td>
@@ -179,7 +163,7 @@ export default async function InterventionsPage({
                     </td>
                     <td className="px-3 py-2">{item.workType}</td>
                     <td className="px-3 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE[item.status]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE[item.status] ?? STATUS_BADGE_DEFAULT}`}>
                         {STATUS_LABELS[item.status]}
                       </span>
                     </td>

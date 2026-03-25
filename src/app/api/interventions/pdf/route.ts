@@ -4,15 +4,7 @@ import React from 'react';
 import { InterventionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { InterventionsPdfDocument } from '@/lib/pdf/interventions-document';
-
-const STATUS_LABELS: Record<InterventionStatus, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
+import { STATUS_LABELS, isNonSoldee, NON_SOLDEE_DB_WHERE } from '@/lib/interventions';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -27,6 +19,9 @@ export async function GET(request: NextRequest) {
     dateFilter = { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) };
   }
 
+  const knownStatuses = new Set<string>(Object.values(InterventionStatus));
+  const safeStatut = statut && knownStatuses.has(statut) ? statut as InterventionStatus : undefined;
+
   const [settings, interventions] = await Promise.all([
     prisma.userSetting.upsert({
       where: { id: 1 },
@@ -36,21 +31,18 @@ export async function GET(request: NextRequest) {
     prisma.intervention.findMany({
       where: {
         ...(dateFilter ? { date: dateFilter } : {}),
-        ...(statut ? { status: statut as InterventionStatus } : {}),
+        ...(nonSoldees === '1'
+          ? NON_SOLDEE_DB_WHERE
+          : safeStatut ? { status: safeStatut } : {}),
         ...(clientId ? { clientId: Number(clientId) } : {}),
-        ...(nonSoldees === '1' ? {
-          status: { not: 'ANNULEE' as InterventionStatus },
-          plannedAmount: { gt: 0 },
-        } : {}),
       },
       include: { client: true },
       orderBy: { date: 'desc' },
     }),
   ]);
 
-  // PAYEE may not exist in DB enum yet — filter in JS
   const filteredInterventions = nonSoldees === '1'
-    ? interventions.filter((i) => (i.status as string) !== 'PAYEE')
+    ? interventions.filter((i) => isNonSoldee(i.status, Number(i.plannedAmount), Number(i.receivedAmount)))
     : interventions;
 
   // Build filter label
@@ -60,7 +52,7 @@ export async function GET(request: NextRequest) {
     const label = new Date(y, m - 1, 1).toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' });
     parts.push(label.charAt(0).toUpperCase() + label.slice(1));
   }
-  if (statut) parts.push(STATUS_LABELS[statut as InterventionStatus] ?? statut);
+  if (statut && nonSoldees !== '1') parts.push(STATUS_LABELS[statut] ?? statut);
   if (nonSoldees === '1') parts.push('Non soldées');
   const filterLabel = parts.length > 0 ? parts.join(' · ') : 'Toutes les interventions';
 

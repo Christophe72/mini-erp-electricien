@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { InterventionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { STATUS_LABELS, PAYMENT_LABELS, getReste, isNonSoldee, NON_SOLDEE_DB_WHERE } from '@/lib/interventions';
 
 function csvCell(value: unknown): string {
   const str = value === null || value === undefined ? '' : String(value);
@@ -13,22 +14,6 @@ function csvCell(value: unknown): string {
 function csvRow(cells: unknown[]): string {
   return cells.map(csvCell).join(',');
 }
-
-const STATUS_LABELS: Record<InterventionStatus, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
-
-const PAYMENT_LABELS: Record<string, string> = {
-  ESPECES: 'Espèces',
-  VIREMENT: 'Virement',
-  CARTE: 'Carte',
-  AUTRE: 'Autre',
-};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -43,19 +28,24 @@ export async function GET(request: NextRequest) {
     dateFilter = { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) };
   }
 
+  const knownStatuses = new Set<string>(Object.values(InterventionStatus));
+  const safeStatut = statut && knownStatuses.has(statut) ? statut as InterventionStatus : undefined;
+
   const interventions = await prisma.intervention.findMany({
     where: {
       ...(dateFilter ? { date: dateFilter } : {}),
-      ...(statut ? { status: statut as InterventionStatus } : {}),
+      ...(nonSoldees === '1'
+        ? NON_SOLDEE_DB_WHERE
+        : safeStatut ? { status: safeStatut } : {}),
       ...(clientId ? { clientId: Number(clientId) } : {}),
-      ...(nonSoldees === '1' ? {
-        status: { notIn: ['ANNULEE', 'PAYEE'] as InterventionStatus[] },
-        plannedAmount: { gt: 0 },
-      } : {}),
     },
     include: { client: true },
     orderBy: { date: 'desc' },
   });
+
+  const rows = nonSoldees === '1'
+    ? interventions.filter((i) => isNonSoldee(i.status, Number(i.plannedAmount), Number(i.receivedAmount)))
+    : interventions;
 
   const header = csvRow([
     'Date',
@@ -73,14 +63,14 @@ export async function GET(request: NextRequest) {
     'Notes',
   ]);
 
-  const lines = interventions.map((i) => {
-    const reste = Number(i.plannedAmount) - Number(i.receivedAmount);
+  const lines = rows.map((i) => {
+    const reste = getReste(Number(i.plannedAmount), Number(i.receivedAmount));
     return csvRow([
       new Date(i.date).toLocaleDateString('fr-BE'),
       `${i.client.lastName} ${i.client.firstName}`,
       i.workType,
       i.description ?? '',
-      STATUS_LABELS[i.status],
+      STATUS_LABELS[i.status] ?? i.status,
       i.estimatedDurationHours ?? '',
       i.actualDurationHours ?? '',
       Number(i.plannedAmount).toFixed(2),

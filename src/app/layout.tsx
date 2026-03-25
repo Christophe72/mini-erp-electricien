@@ -17,13 +17,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <head>
         {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
-        <script
-          suppressHydrationWarning
-          // biome-ignore lint: anti-flash inline script must run synchronously before React
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem('theme');var p=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&p)){document.documentElement.classList.add('dark')}})()`,
-          }}
-        />
+        <script src="/theme-init.js" />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
         <div className="fixed right-3 top-2 z-50">

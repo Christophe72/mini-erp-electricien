@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { InterventionStatus, PaymentMethod } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { resolvePaymentDate, canMarkAsPayee } from '@/lib/interventions';
 import DeleteButton from '@/components/DeleteButton';
 
 async function updateIntervention(formData: FormData) {
@@ -16,15 +17,23 @@ async function updateIntervention(formData: FormData) {
   if (!id || !clientId || !date || !workType) throw new Error('Intervention invalide');
 
   const status = String(formData.get('status') ?? 'A_FAIRE') as InterventionStatus;
-  const paymentDateRaw = String(formData.get('paymentDate') ?? '').trim();
+  const plannedAmount = Number(formData.get('plannedAmount') || 0);
+  const receivedAmount = Number(formData.get('receivedAmount') || 0);
+  const rawPaymentDate = String(formData.get('paymentDate') ?? '').trim();
 
-  // Auto-date de paiement si statut PAYEE et aucune date fournie
-  let paymentDate: Date | null = null;
-  if (paymentDateRaw) {
-    paymentDate = new Date(paymentDateRaw);
-  } else if (status === 'PAYEE') {
-    paymentDate = new Date();
+  if (status === 'PAYEE' && !canMarkAsPayee(plannedAmount, receivedAmount)) {
+    // Passer les valeurs soumises pour les restaurer dans le formulaire
+    const qs = new URLSearchParams({
+      error: 'payee_not_covered',
+      _status: status,
+      _planned: String(plannedAmount),
+      _received: String(receivedAmount),
+      _paymentDate: rawPaymentDate,
+    });
+    redirect(`/interventions/${id}/edit?${qs.toString()}`);
   }
+
+  const paymentDate = resolvePaymentDate(status, rawPaymentDate, receivedAmount);
 
   await prisma.intervention.update({
     where: { id },
@@ -36,8 +45,8 @@ async function updateIntervention(formData: FormData) {
       estimatedDurationHours: Number(formData.get('estimatedDurationHours') || 0) || null,
       actualDurationHours: Number(formData.get('actualDurationHours') || 0) || null,
       status,
-      plannedAmount: Number(formData.get('plannedAmount') || 0),
-      receivedAmount: Number(formData.get('receivedAmount') || 0),
+      plannedAmount,
+      receivedAmount,
       paymentMethod: String(formData.get('paymentMethod') ?? 'VIREMENT') as PaymentMethod,
       paymentDate,
       notes: String(formData.get('notes') ?? '').trim() || null,
@@ -65,12 +74,25 @@ async function deleteIntervention(formData: FormData) {
 const inputCls = 'rounded-lg border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:border-slate-400';
 const labelCls = 'mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400';
 
+const ERRORS: Record<string, string> = {
+  payee_not_covered: 'Statut "Payée" impossible : le montant encaissé doit être supérieur ou égal au montant prévu.',
+};
+
 export default async function EditInterventionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    error?: string;
+    _status?: string;
+    _planned?: string;
+    _received?: string;
+    _paymentDate?: string;
+  }>;
 }) {
-  const { id } = await params;
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const { error } = sp;
 
   const [intervention, clients] = await Promise.all([
     prisma.intervention.findUnique({ where: { id: Number(id) } }),
@@ -79,10 +101,18 @@ export default async function EditInterventionPage({
 
   if (!intervention) notFound();
 
+  // Valeurs financières : utiliser les valeurs soumises si on revient d'une erreur,
+  // sinon les valeurs DB
+  const statusValue     = sp._status     ?? intervention.status;
+  const plannedValue    = sp._planned    ?? String(Number(intervention.plannedAmount));
+  const receivedValue   = sp._received   ?? String(Number(intervention.receivedAmount));
+  const paymentDateValue = sp._paymentDate !== undefined
+    ? sp._paymentDate
+    : intervention.paymentDate
+      ? new Date(intervention.paymentDate).toISOString().slice(0, 10)
+      : '';
+
   const dateValue = new Date(intervention.date).toISOString().slice(0, 10);
-  const paymentDateValue = intervention.paymentDate
-    ? new Date(intervention.paymentDate).toISOString().slice(0, 10)
-    : '';
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -93,6 +123,12 @@ export default async function EditInterventionPage({
             ← Retour liste
           </Link>
         </div>
+
+        {error && ERRORS[error] && (
+          <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+            {ERRORS[error]}
+          </div>
+        )}
 
         <form action={updateIntervention} className="grid gap-5">
           <input type="hidden" name="id" value={intervention.id} />
@@ -136,7 +172,7 @@ export default async function EditInterventionPage({
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className={labelCls}>Statut</label>
-              <select name="status" defaultValue={intervention.status} className={inputCls}>
+              <select name="status" defaultValue={statusValue} className={inputCls}>
                 <option value="A_FAIRE">À faire</option>
                 <option value="EN_COURS">En cours</option>
                 <option value="TERMINEE">Terminée</option>
@@ -159,11 +195,11 @@ export default async function EditInterventionPage({
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className={labelCls}>Montant prévu (€)</label>
-              <input type="number" step="0.01" name="plannedAmount" defaultValue={Number(intervention.plannedAmount)} placeholder="0.00" className={inputCls} />
+              <input type="number" step="0.01" name="plannedAmount" defaultValue={plannedValue} placeholder="0.00" className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Montant encaissé (€)</label>
-              <input type="number" step="0.01" name="receivedAmount" defaultValue={Number(intervention.receivedAmount)} placeholder="0.00" className={inputCls} />
+              <input type="number" step="0.01" name="receivedAmount" defaultValue={receivedValue} placeholder="0.00" className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Date de paiement</label>

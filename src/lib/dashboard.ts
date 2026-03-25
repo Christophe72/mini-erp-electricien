@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { getReste, isNonSoldee, NON_SOLDEE_DB_WHERE, EXCLUDE_ANNULEE_WHERE } from '@/lib/interventions';
 
 export async function getDashboardData() {
   const now = new Date();
@@ -21,10 +22,10 @@ export async function getDashboardData() {
     }),
     prisma.client.count(),
     prisma.intervention.count({
-      where: { date: { gte: monthStart, lt: monthEnd } },
+      where: { date: { gte: monthStart, lt: monthEnd }, ...EXCLUDE_ANNULEE_WHERE },
     }),
     prisma.intervention.findMany({
-      where: { date: { gte: monthStart, lt: monthEnd } },
+      where: { date: { gte: monthStart, lt: monthEnd }, ...EXCLUDE_ANNULEE_WHERE },
       select: { receivedAmount: true },
     }),
     prisma.intervention.findMany({
@@ -36,19 +37,17 @@ export async function getDashboardData() {
       where: { status: 'EN_COURS' },
     }),
     prisma.intervention.findMany({
-      where: {
-        status: { not: 'ANNULEE' },
-      },
+      where: NON_SOLDEE_DB_WHERE,
       select: { plannedAmount: true, receivedAmount: true, status: true },
     }),
   ]);
 
   const totalMonth = monthInterventions.reduce((sum, i) => sum + Number(i.receivedAmount), 0);
   const totalToCollect = unpaidInterventions.reduce((sum, i) => {
-    // Exclure aussi PAYEE une fois la migration lancée (status peut ne pas exister encore)
-    if ((i.status as string) === 'PAYEE') return sum;
-    const reste = Number(i.plannedAmount) - Number(i.receivedAmount);
-    return sum + (reste > 0 ? reste : 0);
+    const planned  = Number(i.plannedAmount);
+    const received = Number(i.receivedAmount);
+    if (!isNonSoldee(i.status as string, planned, received)) return sum;
+    return sum + getReste(planned, received);
   }, 0);
 
   const monthlyLimit = Number(settings.monthlyLimit);

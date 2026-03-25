@@ -1,18 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { InterventionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { toEuro } from '@/lib/money';
+import { STATUS_LABELS, PAYMENT_LABELS } from '@/lib/interventions';
 import PrintButton from '@/components/PrintButton';
-
-const STATUS_LABELS: Record<InterventionStatus, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
 
 export default async function RapportPage({
   params,
@@ -154,8 +145,8 @@ export default async function RapportPage({
                   <td className="px-2 py-2">{new Date(item.date).toLocaleDateString('fr-BE')}</td>
                   <td className="px-2 py-2 font-medium">{item.client.firstName} {item.client.lastName}</td>
                   <td className="px-2 py-2">{item.workType}</td>
-                  <td className="px-2 py-2">{STATUS_LABELS[item.status]}</td>
-                  <td className="px-2 py-2 text-slate-600 dark:text-slate-400 print:text-slate-600">{item.paymentMethod}</td>
+                  <td className="px-2 py-2">{STATUS_LABELS[item.status] ?? item.status}</td>
+                  <td className="px-2 py-2 text-slate-600 dark:text-slate-400 print:text-slate-600">{PAYMENT_LABELS[item.paymentMethod] ?? item.paymentMethod}</td>
                   <td className="px-2 py-2 text-right">{toEuro(Number(item.plannedAmount))}</td>
                   <td className="px-2 py-2 text-right font-medium">{toEuro(Number(item.receivedAmount))}</td>
                 </tr>

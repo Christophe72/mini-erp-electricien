@@ -1,21 +1,13 @@
 import Link from 'next/link';
 import { getDashboardData } from '@/lib/dashboard';
 import { toEuro } from '@/lib/money';
+import { STATUS_LABELS } from '@/lib/interventions';
 
 function levelStyles(level: 'green' | 'orange' | 'red') {
   if (level === 'red') return 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700';
   if (level === 'orange') return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-700';
   return 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700';
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  PAYEE: 'Payée',
-  ANNULEE: 'Annulée',
-};
 
 export default async function DashboardPage() {
   const data = await getDashboardData();

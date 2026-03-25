@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { toEuro } from '@/lib/money';
+import { EXCLUDE_ANNULEE_WHERE } from '@/lib/interventions';
 
 function levelStyles(level: 'green' | 'orange' | 'red') {
   if (level === 'red') return 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700';
@@ -33,7 +34,7 @@ export default async function TresoreriePage() {
 
   const [allInterventions, settings] = await Promise.all([
     prisma.intervention.findMany({
-      where: { date: { gte: earliest, lt: latest } },
+      where: { date: { gte: earliest, lt: latest }, ...EXCLUDE_ANNULEE_WHERE },
       select: { date: true, receivedAmount: true },
     }),
     prisma.userSetting.upsert({

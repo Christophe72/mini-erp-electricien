@@ -4,8 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="46028edb-8a14-472b-95a7-7f80aa626294" name="Changes" comment="base crud">
+    <list default="true" id="46028edb-8a14-472b-95a7-7f80aa626294" name="Changes" comment="export pdf et mise a jour readme">
+      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/interventions/csv/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/interventions/csv/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/interventions/pdf/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/interventions/pdf/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/clients/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/clients/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/interventions/[id]/edit/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/interventions/[id]/edit/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/interventions/nouveau/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/interventions/nouveau/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/interventions/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/interventions/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/rapport/[mois]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/rapport/[mois]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/tresorerie/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/tresorerie/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ExportCsvButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ExportCsvButton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/dashboard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/dashboard.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/pdf/interventions-document.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/pdf/interventions-document.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +119,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1774468507466</updated>
-      <workItem from="1774468508653" duration="5536000" />
+      <workItem from="1774468508653" duration="9118000" />
     </task>
     <task id="LOCAL-00001" summary="base crud">
       <option name="closed" value="true" />
@@ -115,7 +129,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774473802436</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="export pdf et mise a jour readme">
+      <option name="closed" value="true" />
+      <created>1774474263129</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1774474263129</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -123,6 +145,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="base crud" />
-    <option name="LAST_COMMIT_MESSAGE" value="base crud" />
+    <MESSAGE value="export pdf et mise a jour readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="export pdf et mise a jour readme" />
   </component>
 </project>
