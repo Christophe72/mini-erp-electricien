@@ -4,14 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="46028edb-8a14-472b-95a7-7f80aa626294" name="Changes" comment="finitions des petits bugs" />
+    <list default="true" id="46028edb-8a14-472b-95a7-7f80aa626294" name="Changes" comment="Completer readme">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/prisma/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prisma/seed.ts" beforeDir="false" afterPath="$PROJECT_DIR$/prisma/seed.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/db.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="23" />
+    <option name="cachedIndexableFilesCount" value="60" />
   </component>
   <component name="FormatOnSaveOptions">
     <option name="myRunOnSave" value="false" />
@@ -107,6 +114,8 @@
       <option name="presentableId" value="Default" />
       <updated>1774468507466</updated>
       <workItem from="1774468508653" duration="10631000" />
+      <workItem from="1774479436368" duration="276000" />
+      <workItem from="1774483171634" duration="1015000" />
     </task>
     <task id="LOCAL-00001" summary="base crud">
       <option name="closed" value="true" />
@@ -164,7 +173,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774479081339</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Completer readme">
+      <option name="closed" value="true" />
+      <created>1774479627219</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1774479627219</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -175,6 +192,7 @@
     <MESSAGE value="export pdf et mise a jour readme" />
     <MESSAGE value="export pdf et debugs" />
     <MESSAGE value="finitions des petits bugs" />
-    <option name="LAST_COMMIT_MESSAGE" value="finitions des petits bugs" />
+    <MESSAGE value="Completer readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="Completer readme" />
   </component>
 </project>

@@ -10,7 +10,8 @@
       "Bash(cat C:/saas/mini-erp-electricien/next.config.*)",
       "Bash(ls C:/saas/mini-erp-electricien/src/app/clients/[id]/ C:/saas/mini-erp-electricien/src/app/clients/nouveau/ C:/saas/mini-erp-electricien/src/app/interventions/nouveau/)",
       "Bash(xargs grep:*)",
-      "Bash(grep -B2 -A 20 $InterventionPayload C:/saas/mini-erp-electricien/node_modules/.prisma/client/index.d.ts)"
+      "Bash(grep -B2 -A 20 $InterventionPayload C:/saas/mini-erp-electricien/node_modules/.prisma/client/index.d.ts)",
+      "Bash(find C:saasmini-erp-electriciennode_modulesprisma -name *.md)"
     ]
   }
 }
