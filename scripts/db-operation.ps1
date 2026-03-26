@@ -6,11 +6,23 @@ param(
     [string]$Operation = "push"
 )
 
-# Charger les variables depuis .env
-$envFile = Join-Path (Split-Path $PSScriptRoot -Parent) ".env"
-if (Test-Path $envFile) {
+# Charger les variables depuis .env.local puis .env
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$envFiles = @(
+    (Join-Path $projectRoot ".env.local"),
+    (Join-Path $projectRoot ".env")
+)
+
+$vars = @{}
+$loadedAnyEnvFile = $false
+
+foreach ($envFile in $envFiles) {
+    if (-not (Test-Path $envFile)) {
+        continue
+    }
+
+    $loadedAnyEnvFile = $true
     $content = Get-Content $envFile -Raw
-    $vars = @{}
     $content -split "`n" | ForEach-Object {
         $line = $_.Trim()
         if ($line -and -not $line.StartsWith("#")) {
@@ -20,10 +32,13 @@ if (Test-Path $envFile) {
                 $value = $keyValue[1].Trim().TrimStart('"').TrimEnd('"')
                 $vars[$key] = $value
                 [Environment]::SetEnvironmentVariable($key, $value, "Process")
-                Write-Host "✓ $key chargé" -ForegroundColor Green
+                Write-Host "✓ $key chargé depuis $(Split-Path $envFile -Leaf)" -ForegroundColor Green
             }
         }
     }
+}
+
+if ($loadedAnyEnvFile) {
 
     # Vérifier que DATABASE_URL est présent
     $dbUrl = $vars["DATABASE_URL"]
@@ -32,7 +47,8 @@ if (Test-Path $envFile) {
         exit 1
     }
 
-    Write-Host "✓ DATABASE_URL: $($dbUrl.Substring(0, 50))..." -ForegroundColor Green
+    $previewLength = [Math]::Min(50, $dbUrl.Length)
+    Write-Host "✓ DATABASE_URL: $($dbUrl.Substring(0, $previewLength))..." -ForegroundColor Green
 
     # Exécuter l'opération Prisma avec --url pour contourner les problèmes de chargement du fichier .env
     Write-Host "Exécution: npx prisma db $Operation" -ForegroundColor Cyan
@@ -53,7 +69,7 @@ if (Test-Path $envFile) {
 
     exit $LASTEXITCODE
 } else {
-    Write-Error "Fichier .env non trouvé: $envFile"
+    Write-Error "Aucun fichier d'environnement trouvé (.env.local ou .env) dans: $projectRoot"
     exit 1
 }
 

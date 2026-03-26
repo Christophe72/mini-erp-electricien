@@ -28,7 +28,7 @@ Simple, lisible, rapide. Ce n'est pas un ERP lourd — c'est un outil pour ne pa
 **Transversal**
 - Mode jour / nuit avec bouton dans la nav, persisté dans `localStorage`
 - Respect automatique de la préférence système au premier chargement
-- Zéro flash de thème au chargement (`<Script strategy="beforeInteractive">` inline dans `layout.tsx`)
+- Zéro flash de thème au chargement via script inline dans le `<head>` du layout racine
 
 ## Règles métier
 
@@ -37,7 +37,7 @@ Simple, lisible, rapide. Ce n'est pas un ERP lourd — c'est un outil pour ne pa
 - `≥ 80 %` → orange
 - `≥ 100 %` → rouge
 - Supprimer un client supprime aussi ses interventions (`onDelete: Cascade`)
-- Les montants sont stockés en `Decimal` dans SQLite
+- Les montants sont stockés en `Decimal` dans PostgreSQL
 - Le statut `PAYEE` exclut l'intervention du calcul « reste à percevoir »
 
 ## Modèle de données
@@ -60,7 +60,7 @@ Intervention  id, clientId, date, workType, description, estimatedDurationHours,
 |---|---|
 | Framework | Next.js 16 (App Router, webpack) |
 | UI | React 19 + Tailwind CSS v4 |
-| Base de données | SQLite via Prisma 7 + `better-sqlite3` (driver adapter) |
+| Base de données | PostgreSQL local via Docker Compose + Prisma 7 + `@prisma/adapter-pg` |
 | PDF | `@react-pdf/renderer` v4 (rendu serveur) |
 | Langage | TypeScript |
 
@@ -70,17 +70,34 @@ Intervention  id, clientId, date, workType, description, estimatedDurationHours,
 
 - Node.js ≥ 20
 - npm ≥ 10
+- Docker Desktop
+- Docker Compose
 
 ## Installation
 
 ```bash
+docker-compose up -d
 npm install
-npx prisma migrate dev
-npm run seed   # données de démonstration
+npm run prisma:generate
+npm run db:push
+npm run db:seed
 npm run dev
 ```
 
 Ouvrir [http://localhost:3000](http://localhost:3000) — redirige automatiquement vers `/dashboard`.
+
+## Configuration locale
+
+La base PostgreSQL locale attendue est :
+
+- hôte : `localhost`
+- port : `5432`
+- base : `mini_erp`
+- utilisateur : `postgres`
+- mot de passe : `postgres`
+
+Les variables sont définies dans `.env.local` et `.env`.
+Prisma CLI lit sa connexion via `prisma.config.ts`.
 
 ## Scripts
 
@@ -88,7 +105,10 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige automatiqueme
 npm run dev      # serveur de développement (webpack)
 npm run build    # build de production
 npm start        # serveur de production
-npm run seed     # peupler la base avec des données de test
+npm run db:push  # synchroniser le schéma Prisma vers PostgreSQL
+npm run db:seed  # peupler la base avec des données de test
+npm run db:studio # ouvrir Prisma Studio
+npm run prisma:generate # régénérer le client Prisma
 npm run lint     # ESLint
 ```
 
@@ -125,7 +145,7 @@ src/
 │   ├── ExportPdfButton.tsx          # Bouton export PDF (lit les searchParams)
 │   └── PrintButton.tsx             # Bouton impression (window.print)
 └── lib/
-    ├── db.ts                        # Instance Prisma singleton (compatible hot-reload)
+    ├── db.ts                        # Instance Prisma singleton avec adapter PostgreSQL
     ├── dashboard.ts                 # Requêtes agrégées du dashboard
     ├── interventions.ts             # Labels, styles, calculs métier (reste, non soldée, date paiement)
     ├── money.ts                     # Formatage Intl.NumberFormat fr-BE
@@ -133,8 +153,13 @@ src/
         └── interventions-document.tsx  # Composant @react-pdf/renderer (A4 paysage)
 prisma/
 ├── schema.prisma
+├── migrations/
 ├── seed.ts
-└── dev.db                           # Base SQLite locale (gitignorée en prod)
+scripts/
+├── db-operation.ps1                 # Wrapper Prisma qui charge .env.local puis .env
+└── db-seed.ts                       # Wrapper de seed
+docker-compose.yml                   # PostgreSQL local pour le développement
+prisma.config.ts                     # Configuration Prisma 7 pour la CLI
 ```
 
 ## Feuille de route

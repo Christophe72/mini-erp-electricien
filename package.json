@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:push": "powershell -ExecutionPolicy Bypass -File scripts/db-operation.ps1 -Operation push",
     "db:seed": "powershell -ExecutionPolicy Bypass -File scripts/db-operation.ps1 -Operation seed",
-    "db:studio": "powershell -ExecutionPolicy Bypass -File scripts/db-operation.ps1 -Operation studio"
+    "db:studio": "powershell -ExecutionPolicy Bypass -File scripts/db-operation.ps1 -Operation studio",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
